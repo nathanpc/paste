@@ -52,14 +52,14 @@ sub login {
 		"api_user_name" => $username,
 		"api_user_password" => $password
 	]);
-	die "Error: ", $response->content, unless $response->is_success;
+	die colored("Error: ", "red") . $response->content, unless $response->is_success;
 
 	print "Your authentication key is " . $response->content . "\n";
 
 	# Save credentials.
 	my $path = glob("~/.pastebin_key");
 	open(FILE, ">:encoding(UTF-8)", $path)
-		or die "Couldn't open $path: $!\n";
+		or die colored("Error: ", "red") . "Couldn't open $path: $!\n";
 	print FILE $response->content;
 	close(FILE);
 
@@ -76,13 +76,16 @@ sub paste {
 		"api_paste_code" => $paste
 	};
 
-	#if (logged) {
-		#"api_user_name"     => $username,
-		#"api_user_password" => $password
-	#}
-
-	# TODO: Check if logged.
-	      # Else, print a warning saying that the post will be anonymous.
+	# Check if logged.
+	my $path = glob("~/.pastebin_key");
+	if (-e $path) {
+		open(FILE, "<", $path)
+			or die colored("Error: ", "red") . "Couldn't open $path: $!\n";
+		$req_params->{"api_user_key"} = <FILE>;
+		close(FILE);
+	} else {
+		print colored("Warning:", "yellow") . " Pasting anonymously\n";
+	}
 
 	print "Pasting...\n";
 	pretty_print_params($params);
@@ -94,9 +97,10 @@ sub paste {
 
 	# Paste.
 	my $response = $lwp->post("$server_url/api_post.php", $req_params);
-	die "Error:\n", $response->content, unless $response->is_success;
+	die colored("Error:\n", "red"), $response->content, unless $response->is_success;
 
-	print "Pasted: " . $response->content . "\n";  # TODO: Colorize the URL.
+	# TODO: Check if the response contained a URL, otherwise it's an error.
+	print "Pasted: " . colored($response->content, "cyan") . "\n";
 	# TODO: Maybe automatically put the URL in the clipboard?
 }
 
@@ -118,12 +122,14 @@ sub main {
 		}
 	}
 
+	# Get paste from STDIN.
 	my $file_contents = <STDIN>;
 	if ($file_contents eq "\n") {
 		usage();
 	}
 
-	#paste($file_contents, $params)
+	# Paste it.
+	paste($file_contents, $params)
 }
 
 # Main program.
