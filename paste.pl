@@ -102,7 +102,7 @@ sub paste {
 
 	my $paste_url = $response->content;
 	if ($paste_url =~ /^http(?:s)?:\/\/.+$/i) {
-		print "Pasted: " . colored($paste_url, "cyan") . "\n";
+		print "Pasted: " . colored($paste_url, "blue") . "\n";
 		# TODO: Maybe automatically put the URL in the clipboard?
 	} else {
 		print colored("Error: ", "red") . $response->content;
