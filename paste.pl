@@ -8,6 +8,7 @@ use warnings;
 
 use Data::Dumper;
 use LWP;
+use Term::ANSIColor;
 
 my $api_key = "d1c7004bf13191e23215fc12800afc5f";
 my $server_url = "http://pastebin.com/api";
@@ -99,9 +100,13 @@ sub paste {
 	my $response = $lwp->post("$server_url/api_post.php", $req_params);
 	die colored("Error:\n", "red"), $response->content, unless $response->is_success;
 
-	# TODO: Check if the response contained a URL, otherwise it's an error.
-	print "Pasted: " . colored($response->content, "cyan") . "\n";
-	# TODO: Maybe automatically put the URL in the clipboard?
+	my $paste_url = $response->content;
+	if ($paste_url =~ /^http(?:s)?:\/\/.+$/i) {
+		print "Pasted: " . colored($paste_url, "cyan") . "\n";
+		# TODO: Maybe automatically put the URL in the clipboard?
+	} else {
+		print colored("Error: ", "red") . $response->content;
+	}
 }
 
 # Main.
